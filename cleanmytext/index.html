@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>CleanMyText — Clean messy text. Prompt better.</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class"
+    };
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .glass {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .soft-shadow {
+      box-shadow:
+        0 20px 50px rgba(15, 23, 42, 0.08),
+        0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    .dark-mode {
+      background: #0f172a !important;
+      color: #e2e8f0;
+    }
+
+    .dark-mode .bg-white {
+      background-color: #111827 !important;
+    }
+
+    .dark-mode .bg-slate-50 {
+      background-color: #0f172a !important;
+    }
+
+    .dark-mode .bg-slate-100 {
+      background-color: #1e293b !important;
+    }
+
+    .dark-mode .border-slate-100,
+    .dark-mode .border-slate-200 {
+      border-color: #334155 !important;
+    }
+
+    .dark-mode .text-slate-900,
+    .dark-mode .text-slate-800 {
+      color: #f1f5f9 !important;
+    }
+
+    .dark-mode .text-slate-700 {
+      color: #cbd5e1 !important;
+    }
+
+    .dark-mode .text-slate-600 {
+      color: #94a3b8 !important;
+    }
+
+    .dark-mode .text-slate-500 {
+      color: #94a3b8 !important;
+    }
+
+    .dark-mode textarea {
+      background: #0f172a !important;
+      color: #e2e8f0 !important;
+      border-color: #334155 !important;
+    }
+
+    .dark-mode textarea::placeholder {
+      color: #64748b;
+    }
+
+    .dark-mode .bg-indigo-50 {
+      background-color: #1e1b4b !important;
+    }
+
+    .dark-mode .bg-emerald-50 {
+      background-color: #052e1b !important;
+    }
+
+    .dark-mode .bg-slate-50\/60 {
+      background-color: rgba(15, 23, 42, 0.6) !important;
+    }
+
+    .dark-mode .soft-shadow {
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark-mode .hover\:bg-slate-50:hover {
+      background-color: #1e293b !important;
+    }
+
+    .dark-mode .hover\:bg-slate-100:hover {
+      background-color: #334155 !important;
+    }
+
+    .dark-mode .hover\:text-slate-900:hover {
+      color: #f8fafc !important;
+    }
+
+    .dark-mode .bg-white\/80 {
+      background-color: rgba(17, 24, 39, 0.8) !important;
+    }
+
+    .modal-backdrop {
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      transform: translateY(15px) scale(0.97);
+      opacity: 0;
+      transition:
+        transform 0.25s ease,
+        opacity 0.25s ease;
+    }
+
+    .modal-backdrop.active .modal-card {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .toast {
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform 0.25s ease,
+        opacity 0.25s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drag-highlight {
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    }
+
+    .pulse-clean {
+      animation: pulseClean 1s ease infinite;
+    }
+
+    @keyframes pulseClean {
+      0%, 100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.55;
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .feature-card {
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .dark-mode .feature-card:hover {
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+  <!-- ================= NAVBAR ================= -->
+
+  <nav
+    class="sticky top-0 z-40 border-b border-slate-200 bg-white/80 glass"
+  >
+    <div
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+    >
+
+      <div class="flex items-center gap-3">
+        <div
+          class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center font-bold shadow-lg"
+        >
+          C
+        </div>
+
+        <div>
+          <div class="font-bold text-lg tracking-tight">
+            CleanMyText
+          </div>
+
+          <div class="text-[11px] text-slate-500">
+            Clean messy text. Prompt better.
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+
+        <!-- Theme -->
+        <button
+          id="themeToggle"
+          onclick="toggleTheme()"
+          class="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center"
+          title="Toggle theme"
+        >
+          <span id="themeIcon">🌙</span>
+        </button>
+
+        <!-- Settings -->
+        <button
+          onclick="openSettings()"
+          class="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center"
+          title="Settings"
+        >
+          ⚙️
+        </button>
+
+        <div
+          class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-semibold"
+        >
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          Runs locally
+        </div>
+
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ================= MAIN ================= -->
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- HERO -->
+
+    <section class="text-center max-w-3xl mx-auto mb-10">
+
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold mb-5"
+      >
+        ✨ Fast • Private • Browser Based
+      </div>
+
+      <h1
+        class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
+      >
+        Clean messy text.
+        <span
+          class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent"
+        >
+          Prompt better.
+        </span>
+      </h1>
+
+      <p
+        class="mt-5 text-slate-600 text-base sm:text-lg leading-relaxed"
+      >
+        Remove formatting noise, PDF artifacts, broken lines and unnecessary
+        characters before you paste your text into AI tools.
+      </p>
+
+    </section>
+
+
+    <!-- ================= WORKSPACE ================= -->
+
+    <section
+      id="workspace"
+      class="grid lg:grid-cols-2 gap-6"
+    >
+
+      <!-- INPUT CARD -->
+
+      <div
+        id="inputCard"
+        class="bg-white border border-slate-200 rounded-3xl soft-shadow overflow-hidden transition"
+      >
+
+        <div class="p-5 border-b border-slate-100">
+
+          <div class="flex items-start justify-between gap-4">
+
+            <div>
+              <div class="flex items-center gap-2">
+
+                <div
+                  class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"
+                >
+                  ↙
+                </div>
+
+                <div>
+                  <h2 class="font-bold text-slate-900">
+                    Paste Messy Text Here
+                  </h2>
+
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    Add text from PDFs, websites, notes or documents.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
+            <span
+              class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[11px] font-semibold"
+            >
+              INPUT
+            </span>
+
+          </div>
+
+
+          <!-- INPUT TOOLBAR -->
+
+          <div class="flex flex-wrap items-center gap-2 mt-5">
+
+            <button
+              onclick="pasteText()"
+              class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition"
+            >
+              📋 Paste
+            </button>
+
+            <button
+              onclick="openFilePicker()"
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+            >
+              📁 Upload File
+            </button>
+
+            <button
+              onclick="loadSample()"
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+            >
+              ✨ Sample
+            </button>
+
+            <button
+              onclick="restoreDraft()"
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+            >
+              ↩ Restore
+            </button>
+
+            <button
+              onclick="clearWorkspace()"
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+            >
+              🗑 Clear
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="p-5">
+
+          <textarea
+            id="inputText"
+            placeholder="Paste your messy text here..."
+            class="w-full min-h-[420px] rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition"
+          ></textarea>
+
+          <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+
+            <span id="inputStats">
+              0 characters • 0 words
+            </span>
+
+            <span>
+              Drag & drop .txt supported
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- OUTPUT CARD -->
+
+      <div
+        id="outputCard"
+        class="bg-white border border-slate-200 rounded-3xl soft-shadow overflow-hidden transition"
+      >
+
+        <div class="p-5 border-b border-slate-100">
+
+          <div class="flex items-start justify-between gap-4">
+
+            <div>
+              <div class="flex items-center gap-2">
+
+                <div
+                  class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"
+                >
+                  ✓
+                </div>
+
+                <div>
+                  <h2 class="font-bold text-slate-900">
+                    Cleaned Text
+                  </h2>
+
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    Your cleaned text is ready to copy.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
+            <span
+              id="outputStatus"
+              class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[11px] font-semibold"
+            >
+              READY
+            </span>
+
+          </div>
+
+
+          <!-- OUTPUT TOOLBAR -->
+
+          <div class="flex flex-wrap items-center gap-2 mt-5">
+
+            <button
+              onclick="swapText()"
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+            >
+              ⇄ Swap
+            </button>
+
+            <button
+              id="downloadBtn"
+              onclick="downloadText()"
+              disabled
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              ⬇ Download
+            </button>
+
+            <button
+              id="copyBtn"
+              onclick="copyText()"
+              disabled
+              class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              📄 Copy
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="p-5">
+
+          <textarea
+            id="outputText"
+            readonly
+            placeholder="Your cleaned text will appear here..."
+            class="w-full min-h-[420px] rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 outline-none transition"
+          ></textarea>
+
+          <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+
+            <span id="outputStats">
+              0 characters • 0 words
+            </span>
+
+            <span>
+              Cleaned locally
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CLEAN BUTTON -->
+
+    <div class="flex justify-center mt-8">
+
+      <button
+        id="cleanBtn"
+        onclick="cleanText()"
+        class="group px-7 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold shadow-xl shadow-indigo-200 transition active:scale-[0.98]"
+      >
+
+        <span id="cleanBtnText">
+          ✨ Clean Text
+        </span>
+
+      </button>
+
+    </div>
+
+
+    <!-- ================= CLEANING SUMMARY ================= -->
+
+    <section
+      id="cleaningSummary"
+      class="hidden mt-8 fade-in"
+    >
+
+      <div
+        class="bg-white border border-slate-200 rounded-3xl soft-shadow p-6"
+      >
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+          <div>
+            <h3 class="font-bold text-lg text-slate-900">
+              Cleaning summary
+            </h3>
+
+            <p class="text-sm text-slate-500 mt-1">
+              Here is what changed in your text.
+            </p>
+          </div>
+
+          <div
+            id="summaryMessage"
+            class="text-sm font-semibold text-indigo-600"
+          >
+            Cleaned successfully
+          </div>
+
+        </div>
+
+
+        <div class="grid sm:grid-cols-4 gap-3 mt-6">
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">
+              Before
+            </div>
+
+            <div
+              id="beforeChars"
+              class="text-xl font-bold mt-1"
+            >
+              0
+            </div>
+
+            <div class="text-xs text-slate-400">
+              characters
+            </div>
+          </div>
+
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">
+              After
+            </div>
+
+            <div
+              id="afterChars"
+              class="text-xl font-bold mt-1"
+            >
+              0
+            </div>
+
+            <div class="text-xs text-slate-400">
+              characters
+            </div>
+          </div>
+
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">
+              Removed
+            </div>
+
+            <div
+              id="removedChars"
+              class="text-xl font-bold mt-1"
+            >
+              0
+            </div>
+
+            <div class="text-xs text-slate-400">
+              characters
+            </div>
+          </div>
+
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">
+              Reduction
+            </div>
+
+            <div
+              id="reductionPercent"
+              class="text-xl font-bold mt-1"
+            >
+              0%
+            </div>
+
+            <div class="text-xs text-slate-400">
+              overall
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="mt-6">
+
+          <div class="text-sm font-semibold text-slate-700 mb-3">
+            What was cleaned?
+          </div>
+
+          <div
+            id="cleanedBadges"
+            class="flex flex-wrap gap-2"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= CLEANING OPTIONS ================= -->
+
+    <section class="mt-8">
+
+      <div
+        class="bg-white border border-slate-200 rounded-3xl soft-shadow p-6"
+      >
+
+        <div class="flex items-center justify-between gap-4 mb-5">
+
+          <div>
+            <h3 class="font-bold text-lg text-slate-900">
+              Cleaning options
+            </h3>
+
+            <p class="text-sm text-slate-500 mt-1">
+              Choose what CleanMyText should remove or fix.
+            </p>
+          </div>
+
+          <span
+            class="hidden sm:block px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-semibold"
+          >
+            CUSTOMIZE
+          </span>
+
+        </div>
+
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <input
+              id="removeMarkdown"
+              type="checkbox"
+              checked
+              class="w-4 h-4 accent-indigo-600"
+            />
+
+            <span class="text-sm font-medium">
+              Remove Markdown
+            </span>
+          </label>
+
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <input
+              id="removePageNumbers"
+              type="checkbox"
+              checked
+              class="w-4 h-4 accent-indigo-600"
+            />
+
+            <span class="text-sm font-medium">
+              Remove Page Numbers
+            </span>
+          </label>
+
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <input
+              id="fixHyphenation"
+              type="checkbox"
+              checked
+              class="w-4 h-4 accent-indigo-600"
+            />
+
+            <span class="text-sm font-medium">
+              Fix Hyphenation
+            </span>
+          </label>
+
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <input
+              id="normalizeWhitespace"
+              type="checkbox"
+              checked
+              class="w-4 h-4 accent-indigo-600"
+            />
+
+            <span class="text-sm font-medium">
+              Normalize Spaces
+            </span>
+          </label>
+
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <input
+              id="removeUrls"
+              type="checkbox"
+              class="w-4 h-4 accent-indigo-600"
+            />
+
+            <span class="text-sm font-medium">
+              Remove URLs
+            </span>
+          </label>
+
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <input
+              id="removeEmojis"
+              type="checkbox"
+              class="w-4 h-4 accent-indigo-600"
+            />
+
+            <span class="text-sm font-medium">
+              Remove Emojis
+            </span>
+          </label>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- KEYBOARD HELP -->
+
+    <section class="mt-5">
+
+      <div
+        class="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-slate-500"
+      >
+
+        <span>
+          Quick shortcut:
+        </span>
+
+        <kbd
+          class="px-2 py-1 rounded-lg bg-white border border-slate-200 font-mono"
+        >
+          Ctrl
+        </kbd>
+
+        <span>+</span>
+
+        <kbd
+          class="px-2 py-1 rounded-lg bg-white border border-slate-200 font-mono"
+        >
+          Enter
+        </kbd>
+
+        <span>
+          to clean text
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= TRUST CARDS ================= -->
+
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-10">
+
+      <div
+        class="feature-card bg-white border border-slate-200 rounded-2xl p-4"
+      >
+        <div class="text-xl mb-2">🔐</div>
+
+        <div class="font-semibold text-sm">
+          No Login
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+          Start instantly.
+        </div>
+      </div>
+
+
+      <div
+        class="feature-card bg-white border border-slate-200 rounded-2xl p-4"
+      >
+        <div class="text-xl mb-2">🌐</div>
+
+        <div class="font-semibold text-sm">
+          Browser Based
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+          Works directly in your browser.
+        </div>
+      </div>
+
+
+      <div
+        class="feature-card bg-white border border-slate-200 rounded-2xl p-4"
+      >
+        <div class="text-xl mb-2">🛡️</div>
+
+        <div class="font-semibold text-sm">
+          No Uploads
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+          Text processing stays local.
+        </div>
+      </div>
+
+
+      <div
+        class="feature-card bg-white border border-slate-200 rounded-2xl p-4"
+      >
+        <div class="text-xl mb-2">🤖</div>
+
+        <div class="font-semibold text-sm">
+          AI Ready
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+          Prepare cleaner prompts.
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer class="border-t border-slate-200 bg-white mt-8">
+
+    <div
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+    >
+
+      <div
+        class="flex flex-col md:flex-row items-center justify-between gap-5"
+      >
+
+        <div class="text-center md:text-left">
+
+          <div class="font-bold">
+            CleanMyText
+          </div>
+
+          <p class="text-xs text-slate-500 mt-1">
+            Clean your text. Keep your focus.
+          </p>
+
+        </div>
+
+
+        <div class="flex flex-wrap justify-center gap-4 text-xs">
+
+          <button
+            onclick="openInfoModal('how')"
+            class="text-slate-500 hover:text-indigo-600 transition"
+          >
+            How it works
+          </button>
+
+          <button
+            onclick="openInfoModal('privacy')"
+            class="text-slate-500 hover:text-indigo-600 transition"
+          >
+            Privacy
+          </button>
+
+          <button
+            onclick="openInfoModal('faq')"
+            class="text-slate-500 hover:text-indigo-600 transition"
+          >
+            FAQ
+          </button>
+
+          <button
+            onclick="openSettings()"
+            class="text-slate-500 hover:text-indigo-600 transition"
+          >
+            Settings
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="border-t border-slate-100 mt-6 pt-5 text-center text-xs text-slate-400"
+      >
+        © 2026 CleanMyText. Built for cleaner text workflows.
+      </div>
+
+    </div>
+
+  </footer>
+
+
+  <!-- ================= HIDDEN FILE INPUT ================= -->
+
+  <input
+    id="fileInput"
+    type="file"
+    accept=".txt,text/plain"
+    class="hidden"
+    onchange="readTextFile(this.files[0])"
+  />
+
+
+  <!-- ================= SETTINGS MODAL ================= -->
+
+  <div
+    id="settingsModal"
+    class="modal-backdrop fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4"
+    onclick="closeSettingsOnBackdrop(event)"
+  >
+
+    <div
+      class="modal-card w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden"
+    >
+
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+
+        <div>
+          <h3 class="font-bold text-lg">
+            Settings
+          </h3>
+
+          <p class="text-xs text-slate-500 mt-1">
+            Customize your CleanMyText experience.
+          </p>
+        </div>
+
+        <button
+          onclick="closeSettings()"
+          class="w-9 h-9 rounded-xl hover:bg-slate-100 transition"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div class="p-5 space-y-4">
+
+        <label
+          class="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200 cursor-pointer"
+        >
+
+          <div>
+            <div class="font-semibold text-sm">
+              Dark mode
+            </div>
+
+            <div class="text-xs text-slate-500 mt-1">
+              Use a darker interface.
+            </div>
+          </div>
+
+          <input
+            id="settingsDarkMode"
+            type="checkbox"
+            onchange="toggleThemeFromSettings()"
+            class="w-4 h-4 accent-indigo-600"
+          />
+
+        </label>
+
+
+        <label
+          class="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200 cursor-pointer"
+        >
+
+          <div>
+            <div class="font-semibold text-sm">
+              Auto-save draft
+            </div>
+
+            <div class="text-xs text-slate-500 mt-1">
+              Save your current text in this browser.
+            </div>
+          </div>
+
+          <input
+            id="autoSaveToggle"
+            type="checkbox"
+            checked
+            onchange="saveSettings()"
+            class="w-4 h-4 accent-indigo-600"
+          />
+
+        </label>
+
+
+        <div
+          class="p-4 rounded-2xl bg-indigo-50 text-indigo-700 text-xs leading-5"
+        >
+          Your text is processed in your browser. CleanMyText does not need
+          an account or backend to clean text.
+        </div>
+
+      </div>
+
+
+      <div class="p-5 border-t border-slate-100 flex justify-between gap-3">
+
+        <button
+          onclick="resetSettings()"
+          class="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm font-semibold transition"
+        >
+          Reset
+        </button>
+
+        <button
+          onclick="closeSettings()"
+          class="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition"
+        >
+          Done
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ================= INFO MODAL ================= -->
+
+  <div
+    id="infoModal"
+    class="modal-backdrop fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4"
+    onclick="closeInfoOnBackdrop(event)"
+  >
+
+    <div
+      class="modal-card w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden"
+    >
+
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+
+        <div>
+          <h3
+            id="infoTitle"
+            class="font-bold text-lg"
+          >
+            How it works
+          </h3>
+        </div>
+
+        <button
+          onclick="closeInfoModal()"
+          class="w-9 h-9 rounded-xl hover:bg-slate-100 transition"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div
+        id="infoContent"
+        class="p-6 text-sm text-slate-600 leading-7 max-h-[65vh] overflow-y-auto"
+      ></div>
+
+
+      <div class="p-5 border-t border-slate-100 text-right">
+
+        <button
+          onclick="closeInfoModal()"
+          class="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ================= TOAST ================= -->
+
+  <div
+    id="toast"
+    class="toast fixed bottom-5 right-5 z-[60] max-w-sm"
+  >
+
+    <div
+      id="toastInner"
+      class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-sm font-medium"
+    >
+      Done
+    </div>
+
+  </div>
+
+
+  <!-- ================= JAVASCRIPT ================= -->
+
+  <script>
+
+    /* ==========================================
+       ELEMENTS
+    ========================================== */
+
+    const inputText = document.getElementById("inputText");
+    const outputText = document.getElementById("outputText");
+
+    const inputStats = document.getElementById("inputStats");
+    const outputStats = document.getElementById("outputStats");
+
+    const cleanBtn = document.getElementById("cleanBtn");
+    const cleanBtnText = document.getElementById("cleanBtnText");
+
+    const copyBtn = document.getElementById("copyBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    const outputStatus = document.getElementById("outputStatus");
+
+    const cleaningSummary = document.getElementById("cleaningSummary");
+
+    const beforeChars = document.getElementById("beforeChars");
+    const afterChars = document.getElementById("afterChars");
+    const removedChars = document.getElementById("removedChars");
+    const reductionPercent = document.getElementById("reductionPercent");
+
+    const cleanedBadges = document.getElementById("cleanedBadges");
+    const summaryMessage = document.getElementById("summaryMessage");
+
+    const inputCard = document.getElementById("inputCard");
+
+    const toast = document.getElementById("toast");
+    const toastInner = document.getElementById("toastInner");
+
+    const settingsModal = document.getElementById("settingsModal");
+    const infoModal = document.getElementById("infoModal");
+
+    const themeIcon = document.getElementById("themeIcon");
+
+    const autoSaveToggle = document.getElementById("autoSaveToggle");
+    const settingsDarkMode = document.getElementById("settingsDarkMode");
+
+
+    /* ==========================================
+       LOCAL STORAGE KEYS
+    ========================================== */
+
+    const DRAFT_KEY = "cleanMyTextDraft";
+    const THEME_KEY = "cleanMyTextTheme";
+    const SETTINGS_KEY = "cleanMyTextSettings";
+
+
+    /* ==========================================
+       STATS
+    ========================================== */
+
+    function getWordCount(text) {
+
+      const trimmed = text.trim();
+
+      if (!trimmed) {
+        return 0;
+      }
+
+      return trimmed.split(/\s+/).length;
+    }
+
+
+    function updateStats() {
+
+      const input = inputText.value;
+      const output = outputText.value;
+
+      inputStats.textContent =
+        `${input.length} characters • ${getWordCount(input)} words`;
+
+      outputStats.textContent =
+        `${output.length} characters • ${getWordCount(output)} words`;
+
+    }
+
+
+    inputText.addEventListener("input", () => {
+
+      updateStats();
+
+      if (autoSaveToggle.checked) {
+        saveDraft();
+      }
+
+    });
+
+
+    /* ==========================================
+       TOAST
+    ========================================== */
+
+    let toastTimer;
+
+    function showToast(message) {
+
+      toastInner.textContent = message;
+
+      toast.classList.add("show");
+
+      clearTimeout(toastTimer);
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2200);
+
+    }
+
+
+    /* ==========================================
+       THEME
+    ========================================== */
+
+    function applyTheme(theme) {
+
+      if (theme === "dark") {
+
+        document.documentElement.classList.add("dark");
+
+        document.body.classList.add("dark-mode");
+
+        themeIcon.textContent = "☀️";
+
+        settingsDarkMode.checked = true;
+
+      } else {
+
+        document.documentElement.classList.remove("dark");
+
+        document.body.classList.remove("dark-mode");
+
+        themeIcon.textContent = "🌙";
+
+        settingsDarkMode.checked = false;
+
+      }
+
+      localStorage.setItem(THEME_KEY, theme);
+
+    }
+
+
+    function toggleTheme() {
+
+      const isDark =
+        document.body.classList.contains("dark-mode");
+
+      applyTheme(isDark ? "light" : "dark");
+
+    }
+
+
+    function toggleThemeFromSettings() {
+
+      applyTheme(
+        settingsDarkMode.checked
+          ? "dark"
+          : "light"
+      );
+
+    }
+
+
+    function loadTheme() {
+
+      const savedTheme =
+        localStorage.getItem(THEME_KEY) || "light";
+
+      applyTheme(savedTheme);
+
+    }
+
+
+    /* ==========================================
+       SETTINGS
+    ========================================== */
+
+    function loadSettings() {
+
+      const saved =
+        localStorage.getItem(SETTINGS_KEY);
+
+      if (!saved) {
+        autoSaveToggle.checked = true;
+        return;
+      }
+
+      try {
+
+        const settings = JSON.parse(saved);
+
+        autoSaveToggle.checked =
+          settings.autoSave !== false;
+
+      } catch {
+
+        autoSaveToggle.checked = true;
+
+      }
+
+    }
+
+
+    function saveSettings() {
+
+      const settings = {
+        autoSave: autoSaveToggle.checked
+      };
+
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify(settings)
+      );
+
+      showToast("Settings saved");
+
+    }
+
+
+    function resetSettings() {
+
+      autoSaveToggle.checked = true;
+
+      document.getElementById("removeMarkdown").checked = true;
+      document.getElementById("removePageNumbers").checked = true;
+      document.getElementById("fixHyphenation").checked = true;
+      document.getElementById("normalizeWhitespace").checked = true;
+      document.getElementById("removeUrls").checked = false;
+      document.getElementById("removeEmojis").checked = false;
+
+      applyTheme("light");
+
+      saveSettings();
+
+      showToast("Settings reset");
+
+    }
+
+
+    function openSettings() {
+
+      settingsModal.classList.add("active");
+
+    }
+
+
+    function closeSettings() {
+
+      settingsModal.classList.remove("active");
+
+    }
+
+
+    function closeSettingsOnBackdrop(event) {
+
+      if (event.target === settingsModal) {
+        closeSettings();
+      }
+
+    }
+
+
+    /* ==========================================
+       INFO MODALS
+    ========================================== */
+
+    const infoData = {
+
+      how: {
+
+        title: "How CleanMyText works",
+
+        content: `
+          <div class="space-y-4">
+
+            <p>
+              <strong>1. Paste or upload your text.</strong><br>
+              Add text copied from PDFs, websites, notes, documents or other sources.
+            </p>
+
+            <p>
+              <strong>2. Choose your cleaning options.</strong><br>
+              You can remove Markdown, page numbers, URLs and emojis, while fixing
+              broken words and unnecessary whitespace.
+            </p>
+
+            <p>
+              <strong>3. Click Clean Text.</strong><br>
+              CleanMyText processes the text directly inside your browser.
+            </p>
+
+            <p>
+              <strong>4. Copy or download the result.</strong><br>
+              Your cleaned text can be copied directly into ChatGPT, Gemini or
+              another AI tool.
+            </p>
+
+          </div>
+        `
+
+      },
+
+
+      privacy: {
+
+        title: "Privacy",
+
+        content: `
+          <div class="space-y-4">
+
+            <p>
+              CleanMyText is designed to process your text locally in the browser.
+              The cleaning engine does not require a backend or account.
+            </p>
+
+            <p>
+              Uploaded <strong>.txt</strong> files are read by your browser and
+              processed locally.
+            </p>
+
+            <p>
+              If Auto-save is enabled, your draft is stored in your browser's
+              local storage. You can disable Auto-save from Settings.
+            </p>
+
+            <p>
+              CleanMyText does not need to send the text to an external AI service
+              just to perform the cleaning operations.
+            </p>
+
+          </div>
+        `
+
+      },
+
+
+      faq: {
+
+        title: "Frequently Asked Questions",
+
+        content: `
+          <div class="space-y-5">
+
+            <div>
+              <strong>Does CleanMyText need an account?</strong>
+              <p class="mt-1">
+                No. The current version works without login.
+              </p>
+            </div>
+
+            <div>
+              <strong>Does it upload my text?</strong>
+              <p class="mt-1">
+                The cleaning process runs in your browser.
+              </p>
+            </div>
+
+            <div>
+              <strong>Can I clean PDF text?</strong>
+              <p class="mt-1">
+                Yes. Paste copied PDF text and the cleaner can remove common
+                page numbers, broken lines and hyphenated word splits.
+              </p>
+            </div>
+
+            <div>
+              <strong>Can I use it for AI prompts?</strong>
+              <p class="mt-1">
+                Yes. The purpose is to make messy source text cleaner before
+                using it with AI tools.
+              </p>
+            </div>
+
+            <div>
+              <strong>Can I download the result?</strong>
+              <p class="mt-1">
+                Yes. Use the Download button in the cleaned-text panel.
+              </p>
+            </div>
+
+          </div>
+        `
+
+      }
+
+    };
+
+
+    function openInfoModal(type) {
+
+      const data = infoData[type];
+
+      if (!data) {
+        return;
+      }
+
+      document.getElementById("infoTitle").textContent =
+        data.title;
+
+      document.getElementById("infoContent").innerHTML =
+        data.content;
+
+      infoModal.classList.add("active");
+
+    }
+
+
+    function closeInfoModal() {
+
+      infoModal.classList.remove("active");
+
+    }
+
+
+    function closeInfoOnBackdrop(event) {
+
+      if (event.target === infoModal) {
+        closeInfoModal();
+      }
+
+    }
+
+
+    /* ==========================================
+       PASTE
+    ========================================== */
+
+    async function pasteText() {
+
+      try {
+
+        const text =
+          await navigator.clipboard.readText();
+
+        if (!text) {
+
+          showToast("Clipboard is empty");
+
+          return;
+
+        }
+
+        inputText.value = text;
+
+        outputText.value = "";
+
+        hideSummary();
+
+        updateStats();
+
+        saveDraft();
+
+        updateButtons();
+
+        showToast("Text pasted");
+
+      } catch {
+
+        showToast("Clipboard permission denied");
+
+      }
+
+    }
+
+
+    /* ==========================================
+       SAMPLE TEXT
+    ========================================== */
+
+    function loadSample() {
+
+      inputText.value =
+`Page 12
+
+This is an example of messy text copied from a PDF docu-
+ment. It contains     extra spaces, broken lines and
+unnecessary formatting.
+
+• First item
+• Second item
+• Third item
+
+This text can be cleaned before sending it to an AI tool.
+
+https://example.com/some-page
+
+**Important:** Clean text is easier to read and reuse.`;
+
+      outputText.value = "";
+
+      hideSummary();
+
+      updateStats();
+
+      saveDraft();
+
+      updateButtons();
+
+      showToast("Sample text loaded");
+
+    }
+
+
+    /* ==========================================
+       RESTORE
+    ========================================== */
+
+    function restoreDraft() {
+
+      const draft =
+        localStorage.getItem(DRAFT_KEY);
+
+      if (!draft) {
+
+        showToast("No saved draft found");
+
+        return;
+
+      }
+
+      inputText.value = draft;
+
+      outputText.value = "";
+
+      hideSummary();
+
+      updateStats();
+
+      updateButtons();
+
+      showToast("Draft restored");
+
+    }
+
+
+    /* ==========================================
+       SAVE DRAFT
+    ========================================== */
+
+    function saveDraft() {
+
+      if (!autoSaveToggle.checked) {
+        return;
+      }
+
+      localStorage.setItem(
+        DRAFT_KEY,
+        inputText.value
+      );
+
+    }
+
+
+    /* ==========================================
+       FILE UPLOAD
+    ========================================== */
+
+    function openFilePicker() {
+
+      document.getElementById("fileInput").click();
+
+    }
+
+
+    function readTextFile(file) {
+
+      if (!file) {
+        return;
+      }
+
+      const validType =
+        file.type === "text/plain" ||
+        file.name.toLowerCase().endsWith(".txt");
+
+      if (!validType) {
+
+        showToast("Please choose a .txt file");
+
+        return;
+
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(event) {
+
+        inputText.value =
+          event.target.result || "";
+
+        outputText.value = "";
+
+        hideSummary();
+
+        updateStats();
+
+        saveDraft();
+
+        updateButtons();
+
+        showToast("Text file loaded");
+
+      };
+
+
+      reader.onerror = function() {
+
+        showToast("Could not read the file");
+
+      };
+
+
+      reader.readAsText(file);
+
+    }
+
+
+    /* ==========================================
+       DRAG & DROP
+    ========================================== */
+
+    inputText.addEventListener("dragover", function(event) {
+
+      event.preventDefault();
+
+      inputCard.classList.add("drag-highlight");
+
+    });
+
+
+    inputText.addEventListener("dragleave", function() {
+
+      inputCard.classList.remove("drag-highlight");
+
+    });
+
+
+    inputText.addEventListener("drop", function(event) {
+
+      event.preventDefault();
+
+      inputCard.classList.remove("drag-highlight");
+
+      const file = event.dataTransfer.files[0];
+
+      if (file) {
+        readTextFile(file);
+      }
+
+    });
+
+
+    /* ==========================================
+       CLEANING ENGINE
+    ========================================== */
+
+    function cleanText() {
+
+      const original = inputText.value;
+
+      if (!original.trim()) {
+
+        inputText.focus();
+
+        showToast("Please enter some text first");
+
+        return;
+
+      }
+
+
+      cleanBtn.disabled = true;
+
+      cleanBtnText.innerHTML =
+        `<span class="pulse-clean">Cleaning...</span>`;
+
+      outputStatus.textContent = "CLEANING";
+
+      setTimeout(() => {
+
+        const result =
+          processText(original);
+
+        outputText.value =
+          result.text;
+
+        updateStats();
+
+        createSummary(
+          original,
+          result.text,
+          result.actions
+        );
+
+        outputStatus.textContent = "CLEANED";
+
+        cleanBtn.disabled = false;
+
+        cleanBtnText.textContent =
+          "✨ Clean Text";
+
+        updateButtons();
+
+      }, 180);
+
+    }
+
+
+    function processText(input) {
+
+      let text = input;
+      const actions = new Set();
+
+      const removeMarkdown =
+        document.getElementById("removeMarkdown").checked;
+
+      const removePageNumbers =
+        document.getElementById("removePageNumbers").checked;
+
+      const fixHyphenation =
+        document.getElementById("fixHyphenation").checked;
+
+      const normalizeWhitespace =
+        document.getElementById("normalizeWhitespace").checked;
+
+      const removeUrls =
+        document.getElementById("removeUrls").checked;
+
+      const removeEmojis =
+        document.getElementById("removeEmojis").checked;
+
+
+      /* ------------------------------------------
+         NORMALIZE LINE ENDINGS
+      ------------------------------------------ */
+
+      text = text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n");
+
+
+      /* ------------------------------------------
+         HIDDEN CHARACTERS
+      ------------------------------------------ */
+
+      const beforeHidden = text;
+
+      text = text
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .replace(/\u00A0/g, " ");
+
+      if (text !== beforeHidden) {
+        actions.add("Hidden whitespace");
+      }
+
+
+      /* ------------------------------------------
+         SMART TYPOGRAPHY
+      ------------------------------------------ */
+
+      const beforeTypography = text;
+
+      text = text
+        .replace(/[“”„‟]/g, '"')
+        .replace(/[‘’‚‛]/g, "'")
+        .replace(/[–—]/g, "-")
+        .replace(/…/g, "...");
+
+      if (text !== beforeTypography) {
+        actions.add("Smart punctuation");
+      }
+
+
+      /* ------------------------------------------
+         HYPHENATED WORDS
+      ------------------------------------------ */
+
+      if (fixHyphenation) {
+
+        const before = text;
+
+        text = text.replace(
+          /([A-Za-z])-\n[ \t]*(?=[A-Za-z])/g,
+          "$1"
+        );
+
+        if (text !== before) {
+          actions.add("Broken words");
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         PDF PAGE NUMBERS
+      ------------------------------------------ */
+
+      if (removePageNumbers) {
+
+        const before = text;
+
+        text = text
+          .replace(
+            /^[ \t]*Page[ \t]+\d+(?:[ \t]+of[ \t]+\d+)?[ \t]*$/gim,
+            ""
+          )
+          .replace(
+            /^[ \t]*Page[ \t]*[-–—]?[ \t]*\d+[ \t]*$/gim,
+            ""
+          )
+          .replace(
+            /^[ \t]*\d{1,4}[ \t]*$/gm,
+            ""
+          );
+
+        if (text !== before) {
+          actions.add("Page numbers");
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         REPEATED HEADERS / FOOTERS
+      ------------------------------------------ */
+
+      if (removePageNumbers) {
+
+        const lines = text.split("\n");
+
+        const counts = {};
+
+        lines.forEach(line => {
+
+          const cleanLine =
+            line.trim().replace(/\s+/g, " ");
+
+          if (
+            cleanLine &&
+            cleanLine.length >= 4 &&
+            cleanLine.length <= 100
+          ) {
+
+            counts[cleanLine] =
+              (counts[cleanLine] || 0) + 1;
+
+          }
+
+        });
+
+
+        const repeated =
+          Object.keys(counts).filter(
+            line => counts[line] >= 3
+          );
+
+
+        if (repeated.length) {
+
+          const before = text;
+
+          text = lines
+            .filter(line => {
+
+              const normalized =
+                line.trim().replace(/\s+/g, " ");
+
+              return !repeated.includes(normalized);
+
+            })
+            .join("\n");
+
+          if (text !== before) {
+            actions.add("Repeated headers/footers");
+          }
+
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         PROTECT PARAGRAPHS AND LISTS
+      ------------------------------------------ */
+
+      const PARAGRAPH_MARKER = "\uE000";
+      const LIST_MARKER = "\uE001";
+
+
+      text = text.replace(
+        /\n[ \t]*\n+/g,
+        PARAGRAPH_MARKER
+      );
+
+
+      text = text.replace(
+        /^[ \t]*([•●◦▪▫‣⁃])\s+/gm,
+        `${LIST_MARKER}`
+      );
+
+
+      text = text.replace(
+        /^[ \t]*[-*+]\s+(?=\S)/gm,
+        `${LIST_MARKER}`
+      );
+
+
+      /* ------------------------------------------
+         MARKDOWN
+      ------------------------------------------ */
+
+      if (removeMarkdown) {
+
+        const before = text;
+
+        text = text
+          .replace(/^[ \t]*#{1,6}\s*/gm, "")
+          .replace(/^[ \t]*>\s?/gm, "")
+          .replace(/\*\*(.*?)\*\*/gs, "$1")
+          .replace(/__(.*?)__/gs, "$1")
+          .replace(/~~(.*?)~~/gs, "$1")
+          .replace(
+            /(?<!\w)\*(.*?)\*(?!\w)/gs,
+            "$1"
+          )
+          .replace(
+            /(?<!\w)_(.*?)_(?!\w)/gs,
+            "$1"
+          );
+
+        if (text !== before) {
+          actions.add("Markdown");
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         URL REMOVAL
+      ------------------------------------------ */
+
+      if (removeUrls) {
+
+        const before = text;
+
+        text = text.replace(
+          /\b(?:https?:\/\/|www\.)[^\s<]+/gi,
+          ""
+        );
+
+        if (text !== before) {
+          actions.add("URLs");
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         EMOJI REMOVAL
+      ------------------------------------------ */
+
+      if (removeEmojis) {
+
+        const before = text;
+
+        try {
+
+          text = text.replace(
+            /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]/gu,
+            ""
+          );
+
+        } catch {
+
+          text = text.replace(
+            /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
+            ""
+          );
+
+        }
+
+        if (text !== before) {
+          actions.add("Emojis");
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         WHITESPACE
+      ------------------------------------------ */
+
+      if (normalizeWhitespace) {
+
+        const before = text;
+
+        text = text
+          .replace(/[ \t]+/g, " ")
+          .replace(/ *\n */g, "\n");
+
+        if (text !== before) {
+          actions.add("Extra spaces");
+        }
+
+      }
+
+
+      /* ------------------------------------------
+         RESTORE PARAGRAPHS
+      ------------------------------------------ */
+
+      text = text.replace(
+        new RegExp(PARAGRAPH_MARKER, "g"),
+        "\n\n"
+      );
+
+
+      /* ------------------------------------------
+         MERGE SINGLE LINE BREAKS
+      ------------------------------------------ */
+
+      const lines = text.split("\n");
+
+      const merged = [];
+
+      for (let i = 0; i < lines.length; i++) {
+
+        const current =
+          lines[i].trim();
+
+        if (!current) {
+
+          merged.push("");
+
+          continue;
+
+        }
+
+
+        const next =
+          i + 1 < lines.length
+            ? lines[i + 1].trim()
+            : "";
+
+
+        const currentIsList =
+          current.startsWith(LIST_MARKER);
+
+
+        const nextIsList =
+          next.startsWith(LIST_MARKER);
+
+
+        if (
+          next &&
+          !currentIsList &&
+          !nextIsList &&
+          !/[.!?:;]$/.test(current)
+        ) {
+
+          merged.push(
+            current + " "
+          );
+
+        } else {
+
+          merged.push(current);
+
+        }
+
+      }
+
+
+      text = merged.join("\n");
+
+
+      /* ------------------------------------------
+         RESTORE LIST MARKERS
+      ------------------------------------------ */
+
+      text = text.replace(
+        new RegExp(LIST_MARKER, "g"),
+        "• "
+      );
+
+
+      /* ------------------------------------------
+         NUMBERED LIST FORMATTING
+      ------------------------------------------ */
+
+      text = text.replace(
+        /^[ \t]*(\d{1,2}\.)\s+/gm,
+        "\n$1 "
+      );
+
+
+      /* ------------------------------------------
+         CLEAN EXCESS BLANK LINES
+      ------------------------------------------ */
+
+      text = text
+        .replace(/\n{3,}/g, "\n\n")
+        .replace(/[ \t]+\n/g, "\n")
+        .trim();
+
+
+      return {
+        text,
+        actions: Array.from(actions)
+      };
+
+    }
+
+
+    /* ==========================================
+       SUMMARY
+    ========================================== */
+
+    function createSummary(
+      before,
+      after,
+      actions
+    ) {
+
+      cleaningSummary.classList.remove("hidden");
+
+      beforeChars.textContent =
+        before.length.toLocaleString();
+
+      afterChars.textContent =
+        after.length.toLocaleString();
+
+      const removed =
+        Math.max(0, before.length - after.length);
+
+      removedChars.textContent =
+        removed.toLocaleString();
+
+
+      const reduction =
+        before.length
+          ? ((removed / before.length) * 100)
+          : 0;
+
+      reductionPercent.textContent =
+        `${reduction.toFixed(1)}%`;
+
+
+      cleanedBadges.innerHTML = "";
+
+
+      if (actions.length === 0) {
+
+        const badge =
+          document.createElement("span");
+
+        badge.className =
+          "px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold";
+
+        badge.textContent =
+          "No major changes needed";
+
+        cleanedBadges.appendChild(badge);
+
+        summaryMessage.textContent =
+          "No cleanable changes found";
+
+        return;
+
+      }
+
+
+      actions.forEach(action => {
+
+        const badge =
+          document.createElement("span");
+
+        badge.className =
+          "px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold";
+
+        badge.textContent =
+          `✓ ${action}`;
+
+        cleanedBadges.appendChild(badge);
+
+      });
+
+
+      summaryMessage.textContent =
+        `${actions.length} cleaning operation${actions.length === 1 ? "" : "s"} applied`;
+
+    }
+
+
+    function hideSummary() {
+
+      cleaningSummary.classList.add("hidden");
+
+    }
+
+
+    /* ==========================================
+       COPY
+    ========================================== */
+
+    async function copyText() {
+
+      const text =
+        outputText.value;
+
+      if (!text) {
+
+        showToast("Nothing to copy");
+
+        return;
+
+      }
+
+
+      try {
+
+        await navigator.clipboard.writeText(text);
+
+        const original =
+          copyBtn.textContent;
+
+        copyBtn.textContent =
+          "✓ Copied!";
+
+        showToast("Cleaned text copied");
+
+        setTimeout(() => {
+
+          copyBtn.textContent =
+            original;
+
+        }, 1500);
+
+      } catch {
+
+        outputText.select();
+
+        document.execCommand("copy");
+
+        showToast("Copied to clipboard");
+
+      }
+
+    }
+
+
+    /* ==========================================
+       DOWNLOAD
+    ========================================== */
+
+    function downloadText() {
+
+      const text =
+        outputText.value;
+
+      if (!text) {
+
+        showToast("Nothing to download");
+
+        return;
+
+      }
+
+
+      const blob =
+        new Blob(
+          [text],
+          { type: "text/plain;charset=utf-8" }
+        );
+
+
+      const url =
+        URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = url;
+
+      link.download =
+        "cleaned-text.txt";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      URL.revokeObjectURL(url);
+
+      showToast("Downloaded cleaned-text.txt");
+
+    }
+
+
+    /* ==========================================
+       SWAP
+    ========================================== */
+
+    function swapText() {
+
+      const output =
+        outputText.value;
+
+      if (!output) {
+
+        showToast("Clean some text first");
+
+        return;
+
+      }
+
+
+      inputText.value =
+        output;
+
+      outputText.value =
+        "";
+
+      hideSummary();
+
+      updateStats();
+
+      saveDraft();
+
+      updateButtons();
+
+      inputText.focus();
+
+      showToast("Cleaned text moved to input");
+
+    }
+
+
+    /* ==========================================
+       CLEAR
+    ========================================== */
+
+    function clearWorkspace() {
+  inputText.value = "";
+  outputText.value = "";
+  hideSummary();
+  updateStats();
+  updateButtons();
+  inputText.focus();
+
+  if (autoSaveToggle.checked) {
+    showToast("Workspace cleared — saved draft is still available");
+  } else {
+    showToast("Workspace cleared");
+  }
+}
+    /* ==========================================
+       BUTTON STATES
+    ========================================== */
+
+    function updateButtons() {
+
+      const hasOutput =
+        Boolean(outputText.value.trim());
+
+      copyBtn.disabled =
+        !hasOutput;
+
+      downloadBtn.disabled =
+        !hasOutput;
+
+    }
+
+
+    /* ==========================================
+       KEYBOARD SHORTCUT
+    ========================================== */
+
+    document.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          event.key === "Enter"
+        ) {
+
+          event.preventDefault();
+
+          cleanText();
+
+        }
+
+
+        if (event.key === "Escape") {
+
+          closeSettings();
+
+          closeInfoModal();
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================
+       CHECKBOX SETTINGS AUTO SAVE
+    ========================================== */
+
+    [
+      "removeMarkdown",
+      "removePageNumbers",
+      "fixHyphenation",
+      "normalizeWhitespace",
+      "removeUrls",
+      "removeEmojis"
+    ].forEach(id => {
+
+      document.getElementById(id)
+        .addEventListener("change", function() {
+
+          const settings = {
+            autoSave: autoSaveToggle.checked
+          };
+
+          localStorage.setItem(
+            SETTINGS_KEY,
+            JSON.stringify(settings)
+          );
+
+        });
+
+    });
+
+
+    /* ==========================================
+       INITIAL LOAD
+    ========================================== */
+
+    loadTheme();
+
+    loadSettings();
+
+    updateStats();
+
+    updateButtons();
+
+    const existingDraft =
+      localStorage.getItem(DRAFT_KEY);
+
+    if (
+      existingDraft &&
+      existingDraft.trim()
+    ) {
+
+      inputText.value =
+        existingDraft;
+
+      updateStats();
+
+    }
+
+  </script>
+
+</body>
+</html>
